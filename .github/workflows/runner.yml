@@ -43,5 +43,5 @@ jobs:
 
   process-templates:
     name: Process templates
-    needs: [android-build, ios-build, linux-build, macos-build, windows-build]
+    # needs: [android-build, ios-build, linux-build, macos-build, windows-build]
     uses: ./.github/workflows/process_templates.yml
