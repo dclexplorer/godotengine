@@ -2,6 +2,7 @@ name: Process templates
 on:
   workflow_call:
 
+
 # Global Settings
 env:
   GODOT_VERSION: 4.5.1.stable
