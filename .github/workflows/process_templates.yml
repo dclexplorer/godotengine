@@ -33,24 +33,10 @@ jobs:
           
 
       - name: Configure AWS CLI for R2
-        env:
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
-          aws configure set aws_access_key_id $R2_ACCESS_KEY_ID
-          aws configure set aws_secret_access_key $R2_SECRET_ACCESS_KEY
+          aws configure set aws_access_key_id ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
           aws configure set region auto
-
-      - name: Test Upload main template to R2
-        env:
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          aws s3 cp icon_outlined.png "s3://${R2_BUCKET}/${{ env.GODOT_VERSION }}/icon_outlined.png" --endpoint-url "${R2_ENDPOINT}"
-          echo "✓ Uploaded main template: icon_outlined.png"
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
 
       - name: Download artifacts from specific run
         uses: dawidd6/action-download-artifact@v6
