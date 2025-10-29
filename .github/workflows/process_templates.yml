@@ -114,12 +114,45 @@ jobs:
               fi
           done
 
-      - name: Upload templates
-        uses: actions/upload-artifact@v4
-        with:
-          name: templates
-          retention-days: 1
-          path: |
-            ${{ env.TEMPLATE_FILE_NAME }}
-            editors/*
-            compressed-templates/*
+      - name: Install AWS CLI
+        run: |
+          if ! command -v aws &> /dev/null; then
+            echo "Installing AWS CLI..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+            rm -rf aws awscliv2.zip
+          else
+            echo "AWS CLI already installed"
+            aws --version
+          fi
+
+      - name: Configure AWS CLI for R2
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws configure set region auto
+
+      - name: Upload main template to R2
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 cp "${{ env.TEMPLATE_FILE_NAME }}" "s3://${R2_BUCKET}/${{ env.GODOT_VERSION }}/${{ env.TEMPLATE_FILE_NAME }}" --endpoint-url "${R2_ENDPOINT}"
+          echo "✓ Uploaded main template: ${{ env.TEMPLATE_FILE_NAME }}"
+
+      - name: Upload editors to R2
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 cp editors/ "s3://${R2_BUCKET}/${{ env.GODOT_VERSION }}/editors/" --recursive --endpoint-url "${R2_ENDPOINT}"
+          echo "✓ Uploaded editors to: ${{ env.GODOT_VERSION }}/editors/"
+
+      - name: Upload compressed templates to R2
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 cp compressed-templates/ "s3://${R2_BUCKET}/${{ env.GODOT_VERSION }}/compressed-templates/" --recursive --endpoint-url "${R2_ENDPOINT}"
+          echo "✓ Uploaded compressed templates to: ${{ env.GODOT_VERSION }}/compressed-templates/"
