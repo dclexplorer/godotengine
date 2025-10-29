@@ -35,7 +35,7 @@ jobs:
             sconsflags: production=yes
             bin: "./bin/godot.macos.template_release.universal"
 
-          - name: Template (target=template_release)
+          - name: Template (target=template_debug)
             cache-name: macos-template-debug
             target: template_debug
             tests: true

@@ -46,6 +46,8 @@ jobs:
           mv MoltenVK/MoltenVK/include/ MoltenVK/
           mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
           popd
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Prepare iOS Files
         run: |
           cp -r misc/dist/ios_xcode ios_xcode
