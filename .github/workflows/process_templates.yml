@@ -22,9 +22,24 @@ jobs:
         with:
           submodules: recursive
           
+
+      - name: Configure AWS CLI for R2
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws configure set region auto
+
+      - name: Test Upload main template to R2
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 cp icon_outlined.png "s3://${R2_BUCKET}/${{ env.GODOT_VERSION }}/icon_outlined.png" --endpoint-url "${R2_ENDPOINT}"
+          echo "✓ Uploaded main template: icon_outlined.png"
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        
+
       - name: Download artifacts from specific run
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -125,24 +140,6 @@ jobs:
               fi
           done
 
-      - name: Install AWS CLI
-        run: |
-          if ! command -v aws &> /dev/null; then
-            echo "Installing AWS CLI..."
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip -q awscliv2.zip
-            sudo ./aws/install
-            rm -rf aws awscliv2.zip
-          else
-            echo "AWS CLI already installed"
-            aws --version
-          fi
-
-      - name: Configure AWS CLI for R2
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws configure set region auto
 
       - name: Upload main template to R2
         env:
