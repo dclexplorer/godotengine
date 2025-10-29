@@ -1,6 +1,15 @@
 name: Process templates
 on:
   workflow_call:
+    secrets:
+      R2_ACCESS_KEY_ID:
+        required: true
+      R2_SECRET_ACCESS_KEY:
+        required: true
+      R2_ENDPOINT:
+        required: true
+      R2_BUCKET:
+        required: true
 
 
 # Global Settings
