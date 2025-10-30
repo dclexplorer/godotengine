@@ -38,34 +38,23 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
           aws configure set region auto
 
-      - name: Download artifacts from specific run
+      - name: Download artifacts from R2
         env:
-          GH_TOKEN: ${{ github.token }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
-          RUN_ID=18918579042
           ARTIFACTS_DIR="./artifacts"
+          RUN_ID="${{ github.run_id }}"
 
-          echo "Downloading artifacts from run ${RUN_ID}..."
+          echo "Downloading artifacts from R2 for run ${RUN_ID}..."
           mkdir -p "${ARTIFACTS_DIR}"
 
-          # Get list of artifacts for the run
-          ARTIFACTS_JSON=$(gh api repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --paginate)
+          # Download all artifacts for this run from R2
+          aws s3 sync "s3://${R2_BUCKET}/artifacts/${RUN_ID}/" "${ARTIFACTS_DIR}/" \
+            --endpoint-url "${R2_ENDPOINT}"
 
-          # Extract artifact IDs and names
-          echo "${ARTIFACTS_JSON}" | jq -r '.artifacts[] | "\(.id) \(.name)"' | while read -r ARTIFACT_ID ARTIFACT_NAME; do
-            echo "Downloading artifact: ${ARTIFACT_NAME} (ID: ${ARTIFACT_ID})"
-
-            # Download the artifact
-            gh api repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip > "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip"
-
-            # Unzip the artifact
-            unzip -q "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip" -d "${ARTIFACTS_DIR}/${ARTIFACT_NAME}"
-            rm "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip"
-
-            echo "✓ Downloaded and extracted: ${ARTIFACT_NAME}"
-          done
-
-          echo "All artifacts downloaded successfully!"
+          echo "✓ All artifacts downloaded successfully from R2!"
+          echo "Artifacts location: ${ARTIFACTS_DIR}/"
 
       # - name: Download artifacts from current run
       #   uses: actions/download-artifact@v4
