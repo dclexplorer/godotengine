@@ -39,11 +39,33 @@ jobs:
           aws configure set region auto
 
       - name: Download artifacts from specific run
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          run_id: 18918579042
-          path: ./artifacts
-          skip_unpack: false
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=18918579042
+          ARTIFACTS_DIR="./artifacts"
+
+          echo "Downloading artifacts from run ${RUN_ID}..."
+          mkdir -p "${ARTIFACTS_DIR}"
+
+          # Get list of artifacts for the run
+          ARTIFACTS_JSON=$(gh api repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --paginate)
+
+          # Extract artifact IDs and names
+          echo "${ARTIFACTS_JSON}" | jq -r '.artifacts[] | "\(.id) \(.name)"' | while read -r ARTIFACT_ID ARTIFACT_NAME; do
+            echo "Downloading artifact: ${ARTIFACT_NAME} (ID: ${ARTIFACT_ID})"
+
+            # Download the artifact
+            gh api repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip > "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip"
+
+            # Unzip the artifact
+            unzip -q "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip" -d "${ARTIFACTS_DIR}/${ARTIFACT_NAME}"
+            rm "${ARTIFACTS_DIR}/${ARTIFACT_NAME}.zip"
+
+            echo "✓ Downloaded and extracted: ${ARTIFACT_NAME}"
+          done
+
+          echo "All artifacts downloaded successfully!"
 
       # - name: Download artifacts from current run
       #   uses: actions/download-artifact@v4
